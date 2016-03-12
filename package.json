@@ -1,6 +1,6 @@
 {
   "name": "fs-page",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Flexible processor of files. Provides extra information taken from the path and front-matter and other tools.",
   "main": "index.js",
   "scripts": {
