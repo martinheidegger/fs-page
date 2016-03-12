@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/martinheidegger/fs-page.svg?branch=master)](https://travis-ci.org/martinheidegger/fs-page)
+[![Coverage Status](https://coveralls.io/repos/github/martinheidegger/fs-page/badge.svg?branch=master)](https://coveralls.io/github/martinheidegger/fs-page?branch=master)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
 # fs-page
 
 fs-page is a node.js library(package) to process files on the file-system as content-source for a html page rendered by a system.
