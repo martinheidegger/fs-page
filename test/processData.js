@@ -1,277 +1,290 @@
 'use strict'
 
-var Lab = require('lab')
-var code = require('code')
-var lab = Lab.script()
-var expect = code.expect
 var fs = require('fs')
-var describe = lab.describe
-var it = lab.it
+var path = require('path')
 var processData = require('../processData')
 var DEFAULT_FIELDS = ['published', 'categories', 'date', 'body', 'createExcerpt']
-var LONG_TEXT = fs.readFileSync(__dirname + '/data/longtext')
+var LONG_TEXT = fs.readFileSync(path.join(__dirname, 'data', 'longtext'))
 
-describe('processing simple data', function () {
-  it('should have at least the basic fields', function (done) {
+function includeOnce (t, keys, onlyOnce) {
+  var counter = {}
+  keys.forEach(function (key) {
+    counter[key] = (counter[key] || 0) + 1
+  })
+  onlyOnce.forEach(function (key) {
+    if (!counter[key]) {
+      t.fail('Key is missing in keys ' + key)
+    }
+    if (counter[key] !== 1) {
+      t.fail('Key exists more than once ' + key)
+    }
+  })
+}
+
+function describe (prefix, handler) {
+  handler(function it (name, method) {
+    require('tap').test(prefix + ' ' + name, method)
+  })
+}
+describe('processing simple data', function (it) {
+  it('should have at least the basic fields', function (t) {
     processData('', function (ignore, data) {
-      expect(data.published).to.be.equal(true)
-      expect(data.categories.length).to.be.equal(0)
-      expect(data.date).to.be.equal(null)
-      expect(data.body).to.be.equal('')
-      expect(Object.keys(data)).to.only.once.include(DEFAULT_FIELDS)
-      done()
+      t.equal(data.published, true)
+      t.equal(data.categories.length, 0)
+      t.equal(data.date, null)
+      t.equal(data.body, '')
+      includeOnce(t, Object.keys(data), DEFAULT_FIELDS)
+      t.end()
     })
   })
-  it('should process the front-matter data', function (done) {
+  it('should process the front-matter data', function (t) {
     processData('---\na: b\n---', function (ignore, data) {
-      expect(data.a).to.be.equal('b')
-      expect(data.body).to.be.equal('')
-      done()
+      t.equal(data.a, 'b')
+      t.equal(data.body, '')
+      t.end()
     })
   })
-  it('should allow overriding of defaults', function (done) {
+  it('should allow overriding of defaults', function (t) {
     processData('---\npublished: false\n---', function (ignore, data) {
-      expect(data.published).to.be.equal(false)
-      done()
+      t.equal(data.published, false)
+      t.end()
     })
   })
-  it('should allow specifying categories', function (done) {
+  it('should allow specifying categories', function (t) {
     processData('---\ncategories: \n - hello\n - world\n---', function (ignore, data) {
-      expect(data.categories).to.only.once.include(['hello', 'world'])
-      done()
+      includeOnce(t, data.categories, ['hello', 'world'])
+      t.end()
     })
   })
 })
-describe('Using default options', function () {
-  it('should be accepted', function (done) {
+describe('Using default options', function (it) {
+  it('should be accepted', function (t) {
     processData('', {data: {test: 'hello'}}, function (ignore, data) {
-      expect(data.test).to.be.equal('hello')
-      done()
+      t.equal(data.test, 'hello')
+      t.end()
     })
   })
-  it('should not override front-matter variables', function (done) {
+  it('should not override front-matter variables', function (t) {
     processData('---\na: b\n---', {data: {a: 'c'}}, function (ignore, data) {
-      expect(data.a).to.be.equal('b')
-      done()
+      t.equal(data.a, 'b')
+      t.end()
     })
   })
 })
-describe('Capabilities to do custom links', function () {
-  it('should be a simple function callback', function (done) {
+describe('Capabilities to do custom links', function (it) {
+  it('should be a simple function callback', function (t) {
     processData('', {data: {slug: 'fancy'}, linkIt: function (link) { return '/' + link }}, function (ignore, data) {
-      expect(data.slug).to.be.equal('fancy')
-      expect(data.link).to.be.equal('/fancy')
-      done()
+      t.equal(data.slug, 'fancy')
+      t.equal(data.link, '/fancy')
+      t.end()
     })
   })
 })
-describe('processing file data', function () {
-  it('should fill the file options', function (done) {
+describe('processing file data', function (it) {
+  it('should fill the file options', function (t) {
     processData('', {filepath: 'fancy'}, function (ignore, data) {
-      expect(data.filepath).to.be.equal('fancy')
-      expect(data.path).to.be.equal('fancy')
-      expect(data.dir).to.be.equal('.')
-      expect(data.slug).to.be.equal('fancy')
-      expect(data.link).to.be.equal('fancy')
-      expect(Object.keys(data)).to.only.once.include(DEFAULT_FIELDS.concat('filepath', 'dir', 'slug', 'link', 'path'))
-      done()
+      t.equal(data.filepath, 'fancy')
+      t.equal(data.path, 'fancy')
+      t.equal(data.dir, '.')
+      t.equal(data.slug, 'fancy')
+      t.equal(data.link, 'fancy')
+      includeOnce(t, Object.keys(data), DEFAULT_FIELDS.concat('filepath', 'dir', 'slug', 'link', 'path'))
+      t.end()
     })
   })
-  it('should make nice slugs from the file path', function (done) {
+  it('should make nice slugs from the file path', function (t) {
     var originalPath = 'funny Oh Bir7関西'
     processData('', {filepath: originalPath, slug: {lower: true}}, function (ignore, data) {
-      expect(data.filepath).to.be.equal(originalPath)
-      expect(data.slug).to.be.equal('funny-oh-bir7')
-      expect(data.link).to.be.equal(data.slug)
-      done()
+      t.equal(data.filepath, originalPath)
+      t.equal(data.slug, 'funny-oh-bir7')
+      t.equal(data.link, data.slug)
+      t.end()
     })
   })
-  it('should prioritize the front matter slug over the path', function (done) {
+  it('should prioritize the front matter slug over the path', function (t) {
     processData('---\nslug: b\n---', {filepath: 'a'}, function (ignore, data) {
-      expect(data.slug).to.be.equal('b')
-      done()
+      t.equal(data.slug, 'b')
+      t.end()
     })
   })
-  it('should respect paths', function (done) {
+  it('should respect paths', function (t) {
     var originalPath = 'this/is/a/path/file'
     processData('', {filepath: originalPath}, function (ignore, data) {
-      expect(data.filepath).to.be.equal(originalPath)
-      expect(data.slug).to.be.equal('this-is-a-path-file')
-      expect(data.link).to.be.equal(data.slug)
-      done()
+      t.equal(data.filepath, originalPath)
+      t.equal(data.slug, 'this-is-a-path-file')
+      t.equal(data.link, data.slug)
+      t.end()
     })
   })
-  it('should respect file endings', function (done) {
+  it('should respect file endings', function (t) {
     var originalPath = 'this/is/a/path/file.md'
     processData('', {filepath: originalPath}, function (ignore, data) {
-      expect(data.filepath).to.be.equal(originalPath)
-      expect(data.slug).to.be.equal('this-is-a-path-file')
-      expect(data.link).to.be.equal(data.slug)
-      done()
+      t.equal(data.filepath, originalPath)
+      t.equal(data.slug, 'this-is-a-path-file')
+      t.equal(data.link, data.slug)
+      t.end()
     })
   })
-  it('should respect file endings', function (done) {
+  it('should respect file endings', function (t) {
     var originalPath = 'this/is/a/path/file.md'
     processData('', {filepath: originalPath}, function (ignore, data) {
-      expect(data.filepath).to.be.equal(originalPath)
-      expect(data.slug).to.be.equal('this-is-a-path-file')
-      expect(data.link).to.be.equal(data.slug)
-      done()
+      t.equal(data.filepath, originalPath)
+      t.equal(data.slug, 'this-is-a-path-file')
+      t.equal(data.link, data.slug)
+      t.end()
     })
   })
-  it('should extract the date from the path', function (done) {
+  it('should extract the date from the path', function (t) {
     var originalPath = '2013-03-02-file.md'
     processData('', {filepath: originalPath}, function (ignore, data) {
-      expect(data.filepath).to.be.equal(originalPath)
-      expect(data.slug).to.be.equal('2013-03-02-file')
-      expect(data.link).to.be.equal(data.slug)
-      expect(data.date.toString()).to.be.equal(new Date(2013, 2, 2).toString())
-      done()
+      t.equal(data.filepath, originalPath)
+      t.equal(data.slug, '2013-03-02-file')
+      t.equal(data.link, data.slug)
+      t.equal(data.date.toString(), new Date(2013, 2, 2).toString())
+      t.end()
     })
   })
-  it('should extract the date from the fs', function (done) {
-    var originalPath = __dirname + '/data/just-a-file.md'
+  it('should extract the date from the fs', function (t) {
+    var originalPath = path.join(__dirname, 'data', 'just-a-file.md')
     processData('', {filepath: originalPath}, function (ignore, data) {
-      expect(data.date.toString()).to.be.equal(fs.statSync(originalPath).mtime.toString())
-      done()
+      t.equal(data.date.toString(), fs.statSync(originalPath).mtime.toString())
+      t.end()
     })
   })
-  it('should not override the path date with the file date', function (done) {
-    var originalPath = __dirname + '/data/2011-01-01-date-path.md'
-    processData('', {filepath: originalPath, root: __dirname + '/data/'}, function (ignore, data) {
-      expect(data.date.toString()).to.be.equal(new Date(2011, 0, 1).toString())
-      done()
+  it('should not override the path date with the file date', function (t) {
+    var originalPath = path.join(__dirname, 'data', '2011-01-01-date-path.md')
+    processData('', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
+      t.equal(data.date.toString(), new Date(2011, 0, 1).toString())
+      t.end()
     })
   })
-  it('should not override the yaml date with the date path', function (done) {
-    var originalPath = __dirname + '/data/2010-01-02-yaml-date.md'
-    processData('---\ndate: 2013-02-01\n---', {filepath: originalPath, root: __dirname + '/data/'}, function (ignore, data) {
-      expect(data.date.toString()).to.be.equal(new Date(Date.UTC(2013, 1, 1)).toString())
-      done()
+  it('should not override the yaml date with the date path', function (t) {
+    var originalPath = path.join(__dirname, 'data', '2010-01-02-yaml-date.md')
+    processData('---\ndate: 2013-02-01\n---', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
+      t.equal(data.date.toString(), new Date(Date.UTC(2013, 1, 1)).toString())
+      t.end()
     })
   })
-  it('should not override the yaml string date with the date path', function (done) {
-    var originalPath = __dirname + '/data/2010-01-02-yaml-date.md'
-    processData('---\ndate: "2013-02-01"\n---', {filepath: originalPath, root: __dirname + '/data/'}, function (ignore, data) {
-      expect(data.date.toString()).to.be.equal(new Date(2013, 1, 1).toString())
-      done()
+  it('should not override the yaml string date with the date path', function (t) {
+    var originalPath = path.join(__dirname, 'data', '2010-01-02-yaml-date.md')
+    processData('---\ndate: "2013-02-01"\n---', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
+      t.equal(data.date.toString(), new Date(2013, 1, 1).toString())
+      t.end()
     })
   })
-  it('should allow overriding of the link independently of the slug', function (done) {
+  it('should allow overriding of the link independently of the slug', function (t) {
     processData('---\nslug: abc\nlink: def\n---', function (ignore, data) {
-      expect(data.slug).to.be.equal('abc')
-      expect(data.link).to.be.equal('def')
-      done()
+      t.equal(data.slug, 'abc')
+      t.equal(data.link, 'def')
+      t.end()
     })
   })
 })
-describe('Custom compilers', function () {
-  it('should be allowed', function (done) {
+describe('Custom compilers', function (it) {
+  it('should be allowed', function (t) {
     processData('hello', {data: {check: true},
       compiler: function (ctx) {
-        expect(ctx.data.body).to.be.equal('hello')
-        expect(ctx.data.check).to.be.equal(true)
+        t.equal(ctx.data.body, 'hello')
+        t.equal(ctx.data.check, true)
         ctx.data.html = 'world'
         return ctx
       }
     }, function (ignore, data) {
-      expect(data.body).to.be.equal('hello')
-      expect(data.check).to.be.equal(true)
-      expect(data.html).to.be.equal('world')
-      done()
+      t.equal(data.body, 'hello')
+      t.equal(data.check, true)
+      t.equal(data.html, 'world')
+      t.end()
     })
   })
-  it('should optionally be async', function (done) {
+  it('should optionally be async', function (t) {
     processData('hello', {data: {check: true},
       compiler: function (ctx, callback) {
-        expect(ctx.data.body).to.be.equal('hello')
-        expect(ctx.data.check).to.be.equal(true)
+        t.equal(ctx.data.body, 'hello')
+        t.equal(ctx.data.check, true)
         ctx.data.html = 'world'
         setImmediate(callback.bind(null, null, ctx))
       }
     }, function (ignore, data) {
-      expect(data.body).to.be.equal('hello')
-      expect(data.check).to.be.equal(true)
-      expect(data.html).to.be.equal('world')
-      done()
+      t.equal(data.body, 'hello')
+      t.equal(data.check, true)
+      t.equal(data.html, 'world')
+      t.end()
     })
   })
-  it('should pass errors in sync mode', function (done) {
+  it('should pass errors in sync mode', function (t) {
     processData('', {
       compiler: function () {
         throw new Error('test')
       }
     }, function (err) {
-      expect(err.message).to.be.equal('test')
-      done()
+      t.equal(err.message, 'test')
+      t.end()
     })
   })
-  it('should pass errors in async mode', function (done) {
+  it('should pass errors in async mode', function (t) {
     processData('', {
       compiler: function (ctx, callback) {
         setImmediate(callback.bind(null, new Error('test')))
       }
     }, function (err) {
-      expect(err.message).to.be.equal('test')
-      done()
+      t.equal(err.message, 'test')
+      t.end()
     })
   })
-  it('should be able to access the options', function (done) {
+  it('should be able to access the options', function (t) {
     processData('', {test: true,
       compiler: function (ctx) {
-        expect(ctx.options.test).to.be.equal(true)
+        t.equal(ctx.options.test, true)
         return ctx
       }
-    }, done)
+    }, t.end)
   })
 })
-describe('excerpts', function () {
-  it('should just work', function (done) {
+describe('excerpts', function (it) {
+  it('should just work', function (t) {
     processData('', {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
       }
     }, function (ignore, data) {
-      expect(data.createExcerpt()).to.be.equal('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ut finibus arcu. Vestibulum id suscipit mauris. Sed venenatis condimentum…')
-      done()
+      t.equal(data.createExcerpt(), 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ut finibus arcu. Vestibulum id suscipit mauris. Sed venenatis condimentum…')
+      t.end()
     })
   })
-  it('be predefinable', function (done) {
+  it('be predefinable', function (t) {
     processData('---\nexcerpt: hello\n---', {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
       }
     }, function (ignore, data) {
-      expect(data.createExcerpt()).to.be.equal('hello')
-      done()
+      t.equal(data.createExcerpt(), 'hello')
+      t.end()
     })
   })
-  it('custom excerpt options', function (done) {
+  it('custom excerpt options', function (t) {
     processData('', {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
       }
     }, function (ignore, data) {
-      expect(data.createExcerpt({pruneLength: 6})).to.be.equal('Lorem…')
-      done()
+      t.equal(data.createExcerpt({pruneLength: 6}), 'Lorem…')
+      t.end()
     })
   })
 })
-describe('images should be extracted', function () {
-  it('from html code', function (done) {
+describe('images should be extracted', function (it) {
+  it('from html code', function (t) {
     processData('<img src="hi">', {images: true,
       compiler: function (ctx) {
         ctx.data.html = ctx.data.body
         return ctx
       }
     }, function (ignore, data) {
-      expect(data.images[0].src).to.be.equal('hi')
-      done()
+      t.equal(data.images[0].src, 'hi')
+      t.end()
     })
   })
 })
-
-exports.lab = lab

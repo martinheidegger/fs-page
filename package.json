@@ -4,7 +4,9 @@
   "description": "Flexible processor of files. Provides extra information taken from the path and front-matter and other tools.",
   "main": "index.js",
   "scripts": {
-    "test": "lab -c -L"
+    "tap": "tap --reporter=spec --check-coverage test/*.js",
+    "quick": "tap test/*.js",
+    "test": "standard && npm run tap"
   },
   "keywords": [
     "static-site-generator",
@@ -16,8 +18,9 @@
   "author": "Martin Heidegger <martin.heidegger@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "code": "^1.4.1",
-    "lab": "^5.10.0"
+    "coveralls": "^2.11.8",
+    "standard": "^6.0.8",
+    "tap": "^5.7.0"
   },
   "dependencies": {
     "cheerio": "^0.20.0",
