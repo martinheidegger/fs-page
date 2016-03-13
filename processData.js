@@ -75,7 +75,11 @@ function postCompiler (callback, err, compilerContext) {
   // require('fs-page/createExcerpt')(data.html)
   //
   // programatically
-  data.createExcerpt = require('./createExcerpt').bind(null, data.excerpt ? '<p>' + data.excerpt + '</p>' : data.html)
+  data.createExcerpt = function () {
+    var excerptBase = data.excerpt ? '<p>' + data.excerpt + '</p>' : data.html
+    console.log(excerptBase)
+    return require('excerpt-html')(excerptBase)
+  }
   if (data.html && options.images) {
     return require('./processImages')(data.html, options.linkIt, function (ignoreError, result) {
       data.html = result.html
