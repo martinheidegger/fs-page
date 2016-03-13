@@ -5,6 +5,7 @@ var path = require('path')
 var slug = require('slug')
 var frontMatter = require('front-matter')
 var dateParser = require('fs-date-parser')
+var Readable = require('stream').Readable
 
 function preparePathForSlug (pth) {
   var pos = pth.search(/\.[^.]+$/)
@@ -82,12 +83,8 @@ function postCompiler (callback, err, compilerContext) {
   callback(null, data)
 }
 
-module.exports = function processData (raw, options, callback) {
-  if (typeof options === 'function') {
-    callback = options
-    options = {}
-  }
-  var fm = frontMatter(raw)
+function processString(rawString, options, callback) {
+  var fm = frontMatter(rawString)
   gatherDefaults(fm.attributes, options, function (ignoreError, data) {
     data.body = fm.body
     var compilerContext = {
@@ -106,4 +103,33 @@ module.exports = function processData (raw, options, callback) {
     }
     postCompiler(callback, null, compilerContext)
   })
+}
+
+module.exports = function processData (raw, options, callback) {
+  if (typeof options === 'function') {
+    callback = options
+    options = {}
+  }
+  if (typeof raw === 'function') {
+    raw = raw(options)
+  }
+  if (raw instanceof Readable) {
+    var stream = raw.pipe(require('./transform')(options))
+    stream.on('data', function (data) {
+      callback(null, data)
+    })
+    console.log('adding error handler')
+    stream.on('error', function (err) {
+      console.log('error! happened', err)
+      callback(err)
+    })
+    return
+  }
+  if (raw === null || raw === undefined) {
+    return setImmediate(callback.bind(null, new Error('No data given to process.')))
+  }
+  if (typeof raw !== 'string') {
+    raw = raw.toString()
+  }
+  return processString(raw, options, callback)
 }

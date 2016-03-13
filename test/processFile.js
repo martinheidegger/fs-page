@@ -26,6 +26,7 @@ test('should result in the files to be relative, given a cwd', function (t) {
 })
 test('should pass the error due to unknown file', function (t) {
   processFile(LONG_TEXT_PATH + '?', function (error) {
+    console.log(error)
     t.notEqual(error, null)
     t.end()
   })

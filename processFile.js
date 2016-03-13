@@ -9,10 +9,11 @@ module.exports = function (filepath, options, callback) {
     options = {}
   }
   options.filepath = filepath
-  fs.readFile(filepath, 'utf-8', function (err, body) {
-    if (err) {
-      return callback(err)
-    }
-    processData(body, options, callback)
-  })
+  try {
+    var stream = fs.createReadStream(filepath)
+    processData(stream, options, callback)
+  } catch (e) {
+    console.log('ERRROR!')
+    setImmediate(callback.bind(null, e))
+  }
 }
