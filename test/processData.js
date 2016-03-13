@@ -71,6 +71,30 @@ describe('Using default options', function (it) {
     })
   })
 })
+describe('Should accept uncommon input', function (it) {
+  it('should resolve the function', function (t) {
+    processData(function () { return 'hello' }, {}, function (ignore, data) {
+      t.equal(data.body, 'hello')
+      t.end()
+    })
+  })
+  it('should not allow null or undefined', function (t) {
+    processData(null, {}, function (error, data) {
+      t.equal(error.message, 'No data given to process.')
+      t.end()
+    })
+  })
+  it('should stringify an object', function (t) {
+    processData({
+      toString: function () {
+        return 'hello'
+      }
+    }, {}, function (ignore, data) {
+      t.equal(data.body, 'hello')
+      t.end()
+    })
+  })
+})
 describe('Capabilities to do custom links', function (it) {
   it('should be a simple function callback', function (t) {
     processData('', {data: {slug: 'fancy'}, linkIt: function (link) { return '/' + link }}, function (ignore, data) {
