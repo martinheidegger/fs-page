@@ -9,11 +9,5 @@ module.exports = function (filepath, options, callback) {
     options = {}
   }
   options.filepath = filepath
-  try {
-    var stream = fs.createReadStream(filepath)
-    processData(stream, options, callback)
-  } catch (e) {
-    console.log('ERRROR!')
-    setImmediate(callback.bind(null, e))
-  }
+  processData(fs.createReadStream(filepath), options, callback)
 }

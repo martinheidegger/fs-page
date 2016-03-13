@@ -1,6 +1,5 @@
 'use strict'
 
-var fs = require('fs')
 var processData = require('./processData')
 var through2 = require('through2')
 
@@ -13,12 +12,13 @@ module.exports = function (options) {
     },
     function (cb) {
       var buffer = Buffer.concat(buffers)
-      processData(buffer, options, (function (err, argument) {
+      var next = function (err, argument) {
         if (argument) {
           this.push(argument)
         }
         cb(err)
-      }).bind(this))
+      }
+      processData(buffer, options, next.bind(this))
     }
   )
 }

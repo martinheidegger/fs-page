@@ -83,7 +83,7 @@ function postCompiler (callback, err, compilerContext) {
   callback(null, data)
 }
 
-function processString(rawString, options, callback) {
+function processString (rawString, options, callback) {
   var fm = frontMatter(rawString)
   gatherDefaults(fm.attributes, options, function (ignoreError, data) {
     data.body = fm.body
@@ -114,15 +114,17 @@ module.exports = function processData (raw, options, callback) {
     raw = raw(options)
   }
   if (raw instanceof Readable) {
+    var _onceDone = false
+    var once = function (err, data) {
+      if (_onceDone) return
+
+      _onceDone = true
+      callback(err, data)
+    }
+    raw.on('error', once)
     var stream = raw.pipe(require('./transform')(options))
-    stream.on('data', function (data) {
-      callback(null, data)
-    })
-    console.log('adding error handler')
-    stream.on('error', function (err) {
-      console.log('error! happened', err)
-      callback(err)
-    })
+    stream.on('data', once.bind(null, null))
+    stream.on('error', once)
     return
   }
   if (raw === null || raw === undefined) {
