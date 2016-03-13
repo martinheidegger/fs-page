@@ -16,6 +16,9 @@ function preparePathForSlug (pth) {
 }
 
 function gatherDefaults (data, options, callback) {
+  if (!options) {
+    options = {}
+  }
   if (options.data) {
     Object.keys(options.data).forEach(function (key) {
       if (data[key] === undefined) {
@@ -53,10 +56,10 @@ function gatherDefaults (data, options, callback) {
       if (!err) {
         data.date = stat.mtime
       }
-      callback(null, data)
+      callback(null, data, options)
     })
   } else {
-    setImmediate(callback.bind(null, null, data))
+    setImmediate(callback.bind(null, null, data, options))
   }
 }
 
@@ -83,9 +86,9 @@ function postCompiler (callback, err, compilerContext) {
   callback(null, data)
 }
 
-function processString (rawString, options, callback) {
+function processString (rawString, opts, callback) {
   var fm = frontMatter(rawString)
-  gatherDefaults(fm.attributes, options, function (ignoreError, data) {
+  gatherDefaults(fm.attributes, opts, function (ignoreError, data, options) {
     data.body = fm.body
     var compilerContext = {
       options: options,
