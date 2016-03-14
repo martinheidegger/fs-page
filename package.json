@@ -15,7 +15,9 @@
     "parser",
     "compiler"
   ],
-  "bin": "bin/fs-page",
+  "bin": {
+    "fs-page": "bin/fs-page"
+  },
   "author": "Martin Heidegger <martin.heidegger@gmail.com>",
   "license": "ISC",
   "devDependencies": {
@@ -34,4 +36,12 @@
     "slug": "^0.9.1",
     "through2": "^2.0.1"
   }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/martinheidegger/fs-page.git"
+  },
+  "bugs": {
+    "url": "https://github.com/martinheidegger/fs-page/issues"
+  },
+  "homepage": "https://github.com/martinheidegger/fs-page#readme"
 }
