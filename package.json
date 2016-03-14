@@ -36,6 +36,9 @@
     "slug": "^0.9.1",
     "through2": "^2.0.1"
   }
+  "directories": {
+    "test": "test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/martinheidegger/fs-page.git"
