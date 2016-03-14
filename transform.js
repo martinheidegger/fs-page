@@ -7,6 +7,9 @@ module.exports = function (options) {
   var buffers = []
   return through2.obj(
     function (chunk, enc, cb) {
+      if (!(chunk instanceof Buffer)) {
+        chunk = new Buffer(chunk)
+      }
       buffers.push(chunk)
       cb(null, null)
     },

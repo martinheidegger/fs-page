@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+
+var options = require('minimist')(process.argv, {
+  alias: {
+    f: 'filepath'
+  }
+})
+options.compiler = function (data, cb) {
+  setImmediate(function () {
+    data.data.html = require('markdown-it')().render(data.data.body)
+    cb(null, data)
+  })
+}
+
+function renderData(data) {
+  if (!data.excerpt) {
+    data.excerpt = data.createExcerpt()
+  }
+  console.log(JSON.stringify(data, false, '  '))
+}
+
+function renderError(err) {
+  console.log(err.stack)
+  process.exit(1)
+}
+
+if (options.filepath) {
+  require('../processFile')(options.filepath, options, function (err, data) {
+    if (err) {
+      return renderError(err)
+    }
+    renderData(data)
+  })
+  return
+}
+
+process.stdin.resume()
+process.stdin.setEncoding('utf8')
+process.stdin
+  .pipe(require('../transform')(options))
+  .on('error', renderError)
+  .on('data', renderData)
