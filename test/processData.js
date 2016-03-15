@@ -27,8 +27,22 @@ function describe (prefix, handler) {
   })
 }
 describe('processing simple data', function (it) {
+  it('should thrown an error on invalid data', function (t) {
+    processData(new Buffer([400, 800, 20]), function (error) {
+      t.notEqual(error, null)
+      t.equal(error.message, 'binary-file')
+      t.end()
+    })
+  })
+  it('should thrown an error if the input is marked as not-text', function (t) {
+    processData(new Buffer(''), {isText: false}, function (error) {
+      t.notEqual(error, null)
+      t.equal(error.message, 'binary-file')
+      t.end()
+    })
+  })
   it('should have at least the basic fields', function (t) {
-    processData('', function (ignore, data) {
+    processData('', null, function (ignore, data) {
       t.equal(data.published, true)
       t.equal(data.categories.length, 0)
       t.equal(data.date, null)

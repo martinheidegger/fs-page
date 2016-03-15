@@ -16,9 +16,6 @@ function preparePathForSlug (pth) {
 }
 
 function gatherDefaults (data, options, callback) {
-  if (!options) {
-    options = {}
-  }
   if (options.data) {
     Object.keys(options.data).forEach(function (key) {
       if (data[key] === undefined) {
@@ -116,6 +113,12 @@ module.exports = function processData (raw, options, callback) {
     callback = options
     options = {}
   }
+  if (!options) {
+    options = {}
+  }
+  if (raw === null || raw === undefined) {
+    return setImmediate(callback.bind(null, new Error('No data given to process.')))
+  }
   if (typeof raw === 'function') {
     raw = raw(options)
   }
@@ -133,8 +136,13 @@ module.exports = function processData (raw, options, callback) {
     stream.on('error', once)
     return
   }
-  if (raw === null || raw === undefined) {
-    return setImmediate(callback.bind(null, new Error('No data given to process.')))
+  if (raw instanceof Buffer) {
+    if (options.isText !== true && options.isText !== false) {
+      options.isText = require('istextorbinary').isTextSync(options.path, raw)
+    }
+    if (!options.isText) {
+      return setImmediate(callback.bind(null, new Error('binary-file')))
+    }
   }
   if (typeof raw !== 'string') {
     raw = raw.toString()
