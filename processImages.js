@@ -1,7 +1,7 @@
 'use strict'
 
-var cheerio = require('cheerio')
 var path = require('path')
+var cheerio = require('cheerio')
 
 function isFeatured (data) {
   return data.classes && data.classes.indexOf('featured') !== -1
@@ -53,7 +53,7 @@ function addToImageList (options, image, images) {
     src = image.attribs[attrib]
   }
   var simpleSrc = typeof src === 'string' ? getSimpleSrc(options.cwd || '.', src) : null
-  var id = image.attribs['data-id'] || src || selector
+  var id = image.attribs['data-id'] || image.attribs.id || src || selector
   var data = getImageDataById(images, id)
   if (!data) {
     images.push({
@@ -77,15 +77,21 @@ function modifyAttribute (node, modifier, attrib) {
   }
 }
 
-module.exports = function processImages (html, options) {
-  if (!options) {
+module.exports = function processImages ($, options) {
+  if (arguments.length < 3) {
+    callback = options
+    options = null
+  }
+  if (!options || options === true) {
     options = {}
   }
   if (!options.srcAttribs) {
     options.srcAttribs = ['data-src', 'src']
   }
-  var $ = cheerio.load(html)
   var images = []
+  if (typeof $ === 'string') {
+    $ = cheerio.load($)
+  }
   $('img').each(function (nr, image) {
     if (options.convertUrl) {
       options.srcAttribs.forEach(

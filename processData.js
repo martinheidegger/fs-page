@@ -3,6 +3,7 @@
 var fs = require('fs')
 var path = require('path')
 var slug = require('slug')
+var cheerio = require('cheerio')
 var frontMatter = require('front-matter')
 var dateParser = require('fs-date-parser')
 var Readable = require('stream').Readable
@@ -82,7 +83,7 @@ function postCompiler (callback, err, compilerContext) {
     }
   }
   if (data.html && options.images) {
-    var imageResult = require('./processImages')(data.html, options.linkIt)
+    var imageResult = require('./processImages')(data.html, options.images)
     data.html = imageResult.html
     data.images = imageResult.images
   }
