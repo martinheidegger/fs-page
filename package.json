@@ -35,7 +35,7 @@
     "minimist": "^1.2.0",
     "slug": "^0.9.1",
     "through2": "^2.0.1"
-  }
+  },
   "directories": {
     "test": "test"
   },
