@@ -47,14 +47,18 @@ function addToImageList (options, image, images) {
   } else {
     classes = null
   }
-  var src = image.attribs['data-src'] || image.attribs['src'] || null
+  var src
+  for (var i = 0; i < options.srcAttribs.length && !src; i++) {
+    var attrib = options.srcAttribs[i]
+    src = image.attribs[attrib]
+  }
   var simpleSrc = typeof src === 'string' ? getSimpleSrc(options.cwd || '.', src) : null
   var id = image.attribs['data-id'] || src || selector
   var data = getImageDataById(images, id)
   if (!data) {
     images.push({
       id: id,
-      src: src,
+      src: src || null,
       type: 'img',
       classes: classes,
       selector: selector,
@@ -63,7 +67,7 @@ function addToImageList (options, image, images) {
   }
 }
 
-function modifyAttribute (node, attrib, modifier) {
+function modifyAttribute (node, modifier, attrib) {
   if (node.attribs[attrib]) {
     if (!node.original) {
       node.original = {}
@@ -77,12 +81,16 @@ module.exports = function processImages (html, options) {
   if (!options) {
     options = {}
   }
+  if (!options.srcAttribs) {
+    options.srcAttribs = ['data-src', 'src']
+  }
   var $ = cheerio.load(html)
   var images = []
   $('img').each(function (nr, image) {
     if (options.convertUrl) {
-      modifyAttribute(image, 'src', options.convertUrl)
-      modifyAttribute(image, 'data-src', options.convertUrl)
+      options.srcAttribs.forEach(
+        modifyAttribute.bind(null, image, options.convertUrl)
+      )
     }
     addToImageList(options, image, images)
   })
