@@ -71,16 +71,15 @@ function postCompiler (callback, err, compilerContext) {
     return callback(err)
   }
   var data = compilerContext.data
-
   var options = compilerContext.options
-  // This is a shortcut api. You could just as well use
-  //
-  // require('fs-page/createExcerpt')(data.html)
-  //
-  // programatically
-  data.createExcerpt = function (options) {
-    var excerptBase = data.excerpt ? '<p>' + data.excerpt + '</p>' : data.html
-    return require('excerpt-html')(excerptBase, options)
+
+  var excerptBase = data.excerpt ? '<p>' + data.excerpt + '</p>' : data.html
+  if (options.excerpt) {
+    if (excerptBase) {
+      data.excerpt = require('excerpt-html')(excerptBase, typeof options.excerpt === 'object' ? options.excerpt : {})
+    } else {
+      data.excerpt = ''
+    }
   }
   if (data.html && options.images) {
     var imageResult = require('./processImages')(data.html, options.linkIt)

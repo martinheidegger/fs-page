@@ -3,7 +3,7 @@
 var fs = require('fs')
 var path = require('path')
 var processData = require('../processData')
-var DEFAULT_FIELDS = ['published', 'categories', 'date', 'body', 'createExcerpt']
+var DEFAULT_FIELDS = ['published', 'categories', 'date', 'body']
 var LONG_TEXT = fs.readFileSync(path.join(__dirname, 'data', 'longtext'))
 
 function includeOnce (t, keys, onlyOnce) {
@@ -294,9 +294,10 @@ describe('excerpts', function (it) {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
-      }
+      },
+      excerpt: true
     }, function (ignore, data) {
-      t.equal(data.createExcerpt(), 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ut finibus arcu. Vestibulum id suscipit mauris. Sed venenatis condimentum…')
+      t.equal(data.excerpt, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc ut finibus arcu. Vestibulum id suscipit mauris. Sed venenatis condimentum…')
       t.end()
     })
   })
@@ -305,9 +306,10 @@ describe('excerpts', function (it) {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
-      }
+      },
+      excerpt: true
     }, function (ignore, data) {
-      t.equal(data.createExcerpt(), 'hello')
+      t.equal(data.excerpt, 'hello')
       t.end()
     })
   })
@@ -316,9 +318,12 @@ describe('excerpts', function (it) {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
+      },
+      excerpt: {
+        pruneLength: 6
       }
     }, function (ignore, data) {
-      t.equal(data.createExcerpt({pruneLength: 6}), 'Lorem…')
+      t.equal(data.excerpt, 'Lorem…')
       t.end()
     })
   })
