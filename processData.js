@@ -137,7 +137,7 @@ module.exports = function processData (raw, options, callback) {
     return
   }
   if (options.isText !== null && options.isText !== undefined) {
-    options.isText = options.isText ? true : false
+    options.isText = (options.isText && true) || false
   } else {
     if (raw instanceof Buffer) {
       options.isText = require('istextorbinary').isTextSync(options.path, raw)
