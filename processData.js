@@ -136,12 +136,13 @@ module.exports = function processData (raw, options, callback) {
     stream.on('error', once)
     return
   }
-  if (raw instanceof Buffer) {
-    if (options.isText !== true && options.isText !== false) {
+  if (options.isText !== null && options.isText !== undefined) {
+    options.isText = options.isText ? true : false
+  } else {
+    if (raw instanceof Buffer) {
       options.isText = require('istextorbinary').isTextSync(options.path, raw)
-    }
-    if (!options.isText) {
-      return setImmediate(callback.bind(null, new Error('binary-file')))
+    } else {
+      options.isText = true
     }
   }
   if (typeof raw !== 'string') {

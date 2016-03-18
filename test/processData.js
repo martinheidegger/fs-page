@@ -27,17 +27,15 @@ function describe (prefix, handler) {
   })
 }
 describe('processing simple data', function (it) {
-  it('should thrown an error on invalid data', function (t) {
-    processData(new Buffer([400, 800, 20]), function (error) {
-      t.notEqual(error, null)
-      t.equal(error.message, 'binary-file')
+  it('should evaluate if a buffer is text', function (t) {
+    processData(new Buffer([400, 800, 20]), function (ignore, data) {
+      t.equal(data.isText, false)
       t.end()
     })
   })
-  it('should thrown an error if the input is marked as not-text', function (t) {
-    processData(new Buffer(''), {isText: false}, function (error) {
-      t.notEqual(error, null)
-      t.equal(error.message, 'binary-file')
+  it('should preserve isText=false marker', function (t) {
+    processData(new Buffer(''), {isText: false}, function (ignore, data) {
+      t.equal(data.isText, false)
       t.end()
     })
   })
@@ -47,6 +45,7 @@ describe('processing simple data', function (it) {
       t.equal(data.categories.length, 0)
       t.equal(data.date, null)
       t.equal(data.body, '')
+      t.equal(data.isText, true)
       includeOnce(t, Object.keys(data), DEFAULT_FIELDS)
       t.end()
     })
