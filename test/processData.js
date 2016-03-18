@@ -118,6 +118,16 @@ describe('Capabilities to do custom links', function (it) {
   })
 })
 describe('processing file data', function (it) {
+  it('should use the stat given', function (t) {
+    var someStat = {
+      mtime: 'not processed'
+    }
+    processData('', {filepath: 'fancy', stat: someStat}, function (ignore, data) {
+      t.equal(data.date, 'not processed')
+      t.equal(data.stat, someStat)
+      t.end()
+    })
+  })
   it('should fill the file options', function (t) {
     processData('', {filepath: 'fancy'}, function (ignore, data) {
       t.equal(data.filepath, 'fancy')
@@ -125,6 +135,7 @@ describe('processing file data', function (it) {
       t.equal(data.dir, '.')
       t.equal(data.slug, 'fancy')
       t.equal(data.link, 'fancy')
+      t.notEqual(data.stat, null)
       includeOnce(t, Object.keys(data), DEFAULT_FIELDS.concat('filepath', 'dir', 'slug', 'link', 'path'))
       t.end()
     })

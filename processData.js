@@ -27,6 +27,7 @@ function gatherDefaults (data, options, callback) {
   if (!data.categories) {
     data.categories = []
   }
+  data.isText = options.isText
   if (options.filepath !== undefined) {
     data.filepath = options.filepath
     if (options.root) {
@@ -48,15 +49,20 @@ function gatherDefaults (data, options, callback) {
   if (data.link && typeof options.linkIt === 'function') {
     data.link = options.linkIt(data.link)
   }
-  if (!data.date && data.filepath) {
-    fs.stat(data.filepath, function (err, stat) {
-      if (!err) {
-        data.date = stat.mtime
-      }
-      callback(null, data, options)
+  data.stat = options.stat
+  var oneLastThing = function () {
+    if (!data.date && data.stat) {
+      data.date = data.stat.mtime
+    }
+    callback(null, data, options)
+  }
+  if (data.filepath && !data.stat) {
+    fs.stat(data.filepath, function (ignoreError, stat) {
+      data.stat = stat
+      oneLastThing()
     })
   } else {
-    setImmediate(callback.bind(null, null, data, options))
+    setImmediate(oneLastThing)
   }
 }
 
@@ -86,10 +92,19 @@ function postCompiler (callback, err, compilerContext) {
   callback(null, data)
 }
 
-function processString (rawString, opts, callback) {
-  var fm = frontMatter(rawString)
-  gatherDefaults(fm.attributes, opts, function (ignoreError, data, options) {
-    data.body = fm.body
+function processBuffer (buffer, opts, callback) {
+  var data
+  var body
+  if (opts.isText) {
+    var fm = frontMatter(buffer.toString())
+    data = fm.attributes
+    body = fm.body
+  } else {
+    data = {}
+    body = buffer
+  }
+  gatherDefaults(data, opts, function (ignoreError, data, options) {
+    data.body = body
     var compilerContext = {
       options: options,
       data: data
@@ -138,15 +153,13 @@ module.exports = function processData (raw, options, callback) {
   }
   if (options.isText !== null && options.isText !== undefined) {
     options.isText = (options.isText && true) || false
+  } else if (raw instanceof Buffer) {
+    options.isText = require('istextorbinary').isTextSync(options.path, raw)
   } else {
-    if (raw instanceof Buffer) {
-      options.isText = require('istextorbinary').isTextSync(options.path, raw)
-    } else {
-      options.isText = true
-    }
+    options.isText = true
   }
-  if (typeof raw !== 'string') {
-    raw = raw.toString()
+  if (!(raw instanceof Buffer)) {
+    raw = new Buffer(raw.toString())
   }
-  return processString(raw, options, callback)
+  return processBuffer(raw, options, callback)
 }
