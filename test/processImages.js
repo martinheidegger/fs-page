@@ -132,8 +132,7 @@ test('prioritze id over data-src of duplicate images', function (t) {
   t.end()
 })
 test('allow processing of image paths', function (t) {
-  var result = processImages('<img src="ac">',
-  {
+  var result = processImages('<img src="ac">', {
     convertUrl: function (src) {
       return 'd'
     }
@@ -143,8 +142,7 @@ test('allow processing of image paths', function (t) {
   t.end()
 })
 test('allow processing of absolute image paths', function (t) {
-  var result = processImages('<img src="http://ac">',
-  {
+  var result = processImages('<img src="http://ac">', {
     convertUrl: function (src) {
       return 'd'
     }
@@ -166,8 +164,7 @@ test('make file system paths relative to the a specified working directory', fun
   t.end()
 })
 test('allow processing of absolute https image paths', function (t) {
-  var result = processImages('<img src="https://ac">',
-  {
+  var result = processImages('<img src="https://ac">', {
     convertUrl: function (src) {
       return 'd'
     }
