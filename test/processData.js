@@ -301,6 +301,14 @@ describe('excerpts', function (it) {
       t.end()
     })
   })
+  it('not break if the compiler doesnt create html', function (t) {
+    processData('', {
+      excerpt: true
+    }, function (ignore, data) {
+      t.equal(data.excerpt, '')
+      t.end()
+    })
+  })
   it('be predefinable', function (t) {
     processData('---\nexcerpt: hello\n---', {
       compiler: function (ctx) {

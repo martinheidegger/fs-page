@@ -3,7 +3,6 @@
 var fs = require('fs')
 var path = require('path')
 var slug = require('slug')
-var cheerio = require('cheerio')
 var frontMatter = require('front-matter')
 var dateParser = require('fs-date-parser')
 var Readable = require('stream').Readable

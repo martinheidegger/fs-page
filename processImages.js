@@ -78,10 +78,6 @@ function modifyAttribute (node, modifier, attrib) {
 }
 
 module.exports = function processImages ($, options) {
-  if (arguments.length < 3) {
-    callback = options
-    options = null
-  }
   if (!options || options === true) {
     options = {}
   }
