@@ -73,11 +73,7 @@ function modifyAttribute (node, attrib, modifier) {
   }
 }
 
-module.exports = function processImages (html, options, callback) {
-  if (arguments.length < 3) {
-    callback = options
-    options = null
-  }
+module.exports = function processImages (html, options) {
   if (!options) {
     options = {}
   }
@@ -94,10 +90,8 @@ module.exports = function processImages (html, options, callback) {
     // Prioritize featuredness
     return (!isFeatured(a) && isFeatured(b)) ? 1 : -1
   })
-  setImmediate(function () {
-    callback(null, {
-      images: images,
-      $: $
-    })
-  })
+  return {
+    images: images,
+    $: $
+  }
 }

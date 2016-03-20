@@ -83,11 +83,9 @@ function postCompiler (callback, err, compilerContext) {
     return require('excerpt-html')(excerptBase, options)
   }
   if (data.html && options.images) {
-    return require('./processImages')(data.html, options.linkIt, function (ignoreError, result) {
-      data.html = result.html
-      data.images = result.images
-      callback(null, data)
-    })
+    var imageResult = require('./processImages')(data.html, options.linkIt)
+    data.html = imageResult.html
+    data.images = imageResult.images
   }
   callback(null, data)
 }
