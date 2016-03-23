@@ -1,6 +1,6 @@
 'use strict'
 
-var processData = require('./processData')
+var parse = require('./parse')
 var through2 = require('through2')
 
 module.exports = function (options) {
@@ -21,7 +21,7 @@ module.exports = function (options) {
         }
         cb(err)
       }
-      processData(buffer, options, next.bind(this))
+      parse(buffer, options, next.bind(this))
     }
   )
 }

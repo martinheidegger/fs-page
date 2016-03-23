@@ -121,7 +121,7 @@ function processBuffer (buffer, opts, callback) {
   })
 }
 
-module.exports = function processData (raw, options, callback) {
+module.exports = function parse (raw, options, callback) {
   if (typeof options === 'function') {
     callback = options
     options = {}

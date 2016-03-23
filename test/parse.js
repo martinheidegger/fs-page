@@ -2,7 +2,7 @@
 
 var fs = require('fs')
 var path = require('path')
-var processData = require('../processData')
+var parse = require('../parse')
 var DEFAULT_FIELDS = ['published', 'categories', 'date', 'body']
 var LONG_TEXT = fs.readFileSync(path.join(__dirname, 'data', 'longtext'))
 
@@ -28,19 +28,19 @@ function describe (prefix, handler) {
 }
 describe('processing simple data', function (it) {
   it('should evaluate if a buffer is text', function (t) {
-    processData(new Buffer([400, 800, 20]), function (ignore, data) {
+    parse(new Buffer([400, 800, 20]), function (ignore, data) {
       t.equal(data.isText, false)
       t.end()
     })
   })
   it('should preserve isText=false marker', function (t) {
-    processData(new Buffer(''), {isText: false}, function (ignore, data) {
+    parse(new Buffer(''), {isText: false}, function (ignore, data) {
       t.equal(data.isText, false)
       t.end()
     })
   })
   it('should have at least the basic fields', function (t) {
-    processData('', null, function (ignore, data) {
+    parse('', null, function (ignore, data) {
       t.equal(data.published, true)
       t.equal(data.categories.length, 0)
       t.equal(data.date, null)
@@ -51,20 +51,20 @@ describe('processing simple data', function (it) {
     })
   })
   it('should process the front-matter data', function (t) {
-    processData('---\na: b\n---', function (ignore, data) {
+    parse('---\na: b\n---', function (ignore, data) {
       t.equal(data.a, 'b')
       t.equal(data.body, '')
       t.end()
     })
   })
   it('should allow overriding of defaults', function (t) {
-    processData('---\npublished: false\n---', function (ignore, data) {
+    parse('---\npublished: false\n---', function (ignore, data) {
       t.equal(data.published, false)
       t.end()
     })
   })
   it('should allow specifying categories', function (t) {
-    processData('---\ncategories: \n - hello\n - world\n---', function (ignore, data) {
+    parse('---\ncategories: \n - hello\n - world\n---', function (ignore, data) {
       includeOnce(t, data.categories, ['hello', 'world'])
       t.end()
     })
@@ -72,13 +72,13 @@ describe('processing simple data', function (it) {
 })
 describe('Using default options', function (it) {
   it('should be accepted', function (t) {
-    processData('', {data: {test: 'hello'}}, function (ignore, data) {
+    parse('', {data: {test: 'hello'}}, function (ignore, data) {
       t.equal(data.test, 'hello')
       t.end()
     })
   })
   it('should not override front-matter variables', function (t) {
-    processData('---\na: b\n---', {data: {a: 'c'}}, function (ignore, data) {
+    parse('---\na: b\n---', {data: {a: 'c'}}, function (ignore, data) {
       t.equal(data.a, 'b')
       t.end()
     })
@@ -86,19 +86,19 @@ describe('Using default options', function (it) {
 })
 describe('Should accept uncommon input', function (it) {
   it('should resolve the function', function (t) {
-    processData(function () { return 'hello' }, {}, function (ignore, data) {
+    parse(function () { return 'hello' }, {}, function (ignore, data) {
       t.equal(data.body, 'hello')
       t.end()
     })
   })
   it('should not allow null or undefined', function (t) {
-    processData(null, {}, function (error, data) {
+    parse(null, {}, function (error, data) {
       t.equal(error.message, 'No data given to process.')
       t.end()
     })
   })
   it('should stringify an object', function (t) {
-    processData({
+    parse({
       toString: function () {
         return 'hello'
       }
@@ -110,7 +110,7 @@ describe('Should accept uncommon input', function (it) {
 })
 describe('Capabilities to do custom links', function (it) {
   it('should be a simple function callback', function (t) {
-    processData('', {data: {slug: 'fancy'}, linkIt: function (link) { return '/' + link }}, function (ignore, data) {
+    parse('', {data: {slug: 'fancy'}, linkIt: function (link) { return '/' + link }}, function (ignore, data) {
       t.equal(data.slug, 'fancy')
       t.equal(data.link, '/fancy')
       t.end()
@@ -122,14 +122,14 @@ describe('processing file data', function (it) {
     var someStat = {
       mtime: 'not processed'
     }
-    processData('', {filepath: 'fancy', stat: someStat}, function (ignore, data) {
+    parse('', {filepath: 'fancy', stat: someStat}, function (ignore, data) {
       t.equal(data.date, 'not processed')
       t.equal(data.stat, someStat)
       t.end()
     })
   })
   it('should fill the file options', function (t) {
-    processData('', {filepath: 'fancy'}, function (ignore, data) {
+    parse('', {filepath: 'fancy'}, function (ignore, data) {
       t.equal(data.filepath, 'fancy')
       t.equal(data.path, 'fancy')
       t.equal(data.dir, '.')
@@ -142,7 +142,7 @@ describe('processing file data', function (it) {
   })
   it('should make nice slugs from the file path', function (t) {
     var originalPath = 'funny Oh Bir7関西'
-    processData('', {filepath: originalPath, slug: {lower: true}}, function (ignore, data) {
+    parse('', {filepath: originalPath, slug: {lower: true}}, function (ignore, data) {
       t.equal(data.filepath, originalPath)
       t.equal(data.slug, 'funny-oh-bir7')
       t.equal(data.link, data.slug)
@@ -150,14 +150,14 @@ describe('processing file data', function (it) {
     })
   })
   it('should prioritize the front matter slug over the path', function (t) {
-    processData('---\nslug: b\n---', {filepath: 'a'}, function (ignore, data) {
+    parse('---\nslug: b\n---', {filepath: 'a'}, function (ignore, data) {
       t.equal(data.slug, 'b')
       t.end()
     })
   })
   it('should respect paths', function (t) {
     var originalPath = 'this/is/a/path/file'
-    processData('', {filepath: originalPath}, function (ignore, data) {
+    parse('', {filepath: originalPath}, function (ignore, data) {
       t.equal(data.filepath, originalPath)
       t.equal(data.slug, 'this-is-a-path-file')
       t.equal(data.link, data.slug)
@@ -166,7 +166,7 @@ describe('processing file data', function (it) {
   })
   it('should respect file endings', function (t) {
     var originalPath = 'this/is/a/path/file.md'
-    processData('', {filepath: originalPath}, function (ignore, data) {
+    parse('', {filepath: originalPath}, function (ignore, data) {
       t.equal(data.filepath, originalPath)
       t.equal(data.slug, 'this-is-a-path-file')
       t.equal(data.link, data.slug)
@@ -175,7 +175,7 @@ describe('processing file data', function (it) {
   })
   it('should respect file endings', function (t) {
     var originalPath = 'this/is/a/path/file.md'
-    processData('', {filepath: originalPath}, function (ignore, data) {
+    parse('', {filepath: originalPath}, function (ignore, data) {
       t.equal(data.filepath, originalPath)
       t.equal(data.slug, 'this-is-a-path-file')
       t.equal(data.link, data.slug)
@@ -184,7 +184,7 @@ describe('processing file data', function (it) {
   })
   it('should extract the date from the path', function (t) {
     var originalPath = '2013-03-02-file.md'
-    processData('', {filepath: originalPath}, function (ignore, data) {
+    parse('', {filepath: originalPath}, function (ignore, data) {
       t.equal(data.filepath, originalPath)
       t.equal(data.slug, '2013-03-02-file')
       t.equal(data.link, data.slug)
@@ -194,34 +194,34 @@ describe('processing file data', function (it) {
   })
   it('should extract the date from the fs', function (t) {
     var originalPath = path.join(__dirname, 'data', 'just-a-file.md')
-    processData('', {filepath: originalPath}, function (ignore, data) {
+    parse('', {filepath: originalPath}, function (ignore, data) {
       t.equal(data.date.toString(), fs.statSync(originalPath).mtime.toString())
       t.end()
     })
   })
   it('should not override the path date with the file date', function (t) {
     var originalPath = path.join(__dirname, 'data', '2011-01-01-date-path.md')
-    processData('', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
+    parse('', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
       t.equal(data.date.toString(), new Date(2011, 0, 1).toString())
       t.end()
     })
   })
   it('should not override the yaml date with the date path', function (t) {
     var originalPath = path.join(__dirname, 'data', '2010-01-02-yaml-date.md')
-    processData('---\ndate: 2013-02-01\n---', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
+    parse('---\ndate: 2013-02-01\n---', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
       t.equal(data.date.toString(), new Date(Date.UTC(2013, 1, 1)).toString())
       t.end()
     })
   })
   it('should not override the yaml string date with the date path', function (t) {
     var originalPath = path.join(__dirname, 'data', '2010-01-02-yaml-date.md')
-    processData('---\ndate: "2013-02-01"\n---', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
+    parse('---\ndate: "2013-02-01"\n---', {filepath: originalPath, root: path.join(__dirname, 'data')}, function (ignore, data) {
       t.equal(data.date.toString(), new Date(2013, 1, 1).toString())
       t.end()
     })
   })
   it('should allow overriding of the link independently of the slug', function (t) {
-    processData('---\nslug: abc\nlink: def\n---', function (ignore, data) {
+    parse('---\nslug: abc\nlink: def\n---', function (ignore, data) {
       t.equal(data.slug, 'abc')
       t.equal(data.link, 'def')
       t.end()
@@ -230,7 +230,7 @@ describe('processing file data', function (it) {
 })
 describe('Custom compilers', function (it) {
   it('should be allowed', function (t) {
-    processData('hello', {data: {check: true},
+    parse('hello', {data: {check: true},
       compiler: function (ctx) {
         t.equal(ctx.data.body, 'hello')
         t.equal(ctx.data.check, true)
@@ -245,7 +245,7 @@ describe('Custom compilers', function (it) {
     })
   })
   it('should optionally be async', function (t) {
-    processData('hello', {data: {check: true},
+    parse('hello', {data: {check: true},
       compiler: function (ctx, callback) {
         t.equal(ctx.data.body, 'hello')
         t.equal(ctx.data.check, true)
@@ -260,7 +260,7 @@ describe('Custom compilers', function (it) {
     })
   })
   it('should pass errors in sync mode', function (t) {
-    processData('', {
+    parse('', {
       compiler: function () {
         throw new Error('test')
       }
@@ -270,7 +270,7 @@ describe('Custom compilers', function (it) {
     })
   })
   it('should pass errors in async mode', function (t) {
-    processData('', {
+    parse('', {
       compiler: function (ctx, callback) {
         setImmediate(callback.bind(null, new Error('test')))
       }
@@ -280,7 +280,7 @@ describe('Custom compilers', function (it) {
     })
   })
   it('should be able to access the options', function (t) {
-    processData('', {test: true,
+    parse('', {test: true,
       compiler: function (ctx) {
         t.equal(ctx.options.test, true)
         return ctx
@@ -290,7 +290,7 @@ describe('Custom compilers', function (it) {
 })
 describe('excerpts', function (it) {
   it('should just work', function (t) {
-    processData('', {
+    parse('', {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
@@ -302,7 +302,7 @@ describe('excerpts', function (it) {
     })
   })
   it('not break if the compiler doesnt create html', function (t) {
-    processData('', {
+    parse('', {
       excerpt: true
     }, function (ignore, data) {
       t.equal(data.excerpt, '')
@@ -310,7 +310,7 @@ describe('excerpts', function (it) {
     })
   })
   it('be predefinable', function (t) {
-    processData('---\nexcerpt: hello\n---', {
+    parse('---\nexcerpt: hello\n---', {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
@@ -322,7 +322,7 @@ describe('excerpts', function (it) {
     })
   })
   it('custom excerpt options', function (t) {
-    processData('', {
+    parse('', {
       compiler: function (ctx) {
         ctx.data.html = LONG_TEXT
         return ctx
@@ -338,7 +338,7 @@ describe('excerpts', function (it) {
 })
 describe('images should be extracted', function (it) {
   it('from html code', function (t) {
-    processData('<img src="hi">', {images: true,
+    parse('<img src="hi">', {images: true,
       compiler: function (ctx) {
         ctx.data.html = ctx.data.body
         return ctx

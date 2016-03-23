@@ -3,6 +3,6 @@
 module.exports = {
   extractImage: require('./extractImages'),
   createExcerpt: require('./createExcerpt'),
-  processData: require('./processData'),
+  parse: require('./parse'),
   processFile: require('./processFile')
 }

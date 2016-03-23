@@ -1,7 +1,7 @@
 'use strict'
 
 var fs = require('fs')
-var processData = require('./processData')
+var parse = require('./parse')
 
 module.exports = function (filepath, options, callback) {
   if (typeof options === 'function') {
@@ -9,5 +9,5 @@ module.exports = function (filepath, options, callback) {
     options = {}
   }
   options.filepath = filepath
-  processData(fs.createReadStream(filepath), options, callback)
+  parse(fs.createReadStream(filepath), options, callback)
 }
