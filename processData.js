@@ -66,12 +66,12 @@ function gatherDefaults (data, options, callback) {
   }
 }
 
-function postCompiler (callback, err, compilerContext) {
+function postCompiler (callback, err, result) {
   if (err) {
     return callback(err)
   }
-  var data = compilerContext.data
-  var options = compilerContext.options
+  var data = result.data
+  var options = result.options
 
   var excerptBase = data.excerpt ? '<p>' + data.excerpt + '</p>' : data.html
   if (options.excerpt) {
@@ -102,21 +102,22 @@ function processBuffer (buffer, opts, callback) {
   }
   gatherDefaults(data, opts, function (ignoreError, data, options) {
     data.body = body
-    var compilerContext = {
+    var result = {
       options: options,
       data: data
     }
+    var err
     if (typeof options.compiler === 'function') {
       if (options.compiler.length > 1) {
-        return options.compiler(compilerContext, postCompiler.bind(null, callback))
+        return options.compiler(result, postCompiler.bind(null, callback))
       }
       try {
-        compilerContext = options.compiler(compilerContext)
+        result = options.compiler(result)
       } catch (e) {
-        return postCompiler(callback, e, compilerContext)
+        err = e
       }
     }
-    postCompiler(callback, null, compilerContext)
+    postCompiler(callback, err, result)
   })
 }
 
