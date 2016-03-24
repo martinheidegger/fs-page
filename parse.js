@@ -46,9 +46,6 @@ function gatherDefaults (data, options, callback) {
   if (!data.link && data.slug !== undefined) {
     data.link = data.slug
   }
-  if (data.link && typeof options.linkIt === 'function') {
-    data.link = options.linkIt(data.link)
-  }
   data.stat = options.stat
   var oneLastThing = function () {
     if (!data.date && data.stat) {

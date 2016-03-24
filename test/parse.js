@@ -108,15 +108,6 @@ describe('Should accept uncommon input', function (it) {
     })
   })
 })
-describe('Capabilities to do custom links', function (it) {
-  it('should be a simple function callback', function (t) {
-    parse('', {data: {slug: 'fancy'}, linkIt: function (link) { return '/' + link }}, function (ignore, data) {
-      t.equal(data.slug, 'fancy')
-      t.equal(data.link, '/fancy')
-      t.end()
-    })
-  })
-})
 describe('processing file data', function (it) {
   it('should use the stat given', function (t) {
     var someStat = {
